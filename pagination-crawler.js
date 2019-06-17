@@ -50,10 +50,9 @@ const main = async function(headless){
     for (let i = 1; i <= 7; i++) {
         log(i)
 
-        let nextJumpEl = await page.$(`#ywz_page li:nth-child(${i})`)
-        // let innerHtml = await nextJumpEl.$eval('span', el => el.innerHTML)
+        let nextJumpEl = await page.$(`#ywz_page li:nth-child(${i > 1 ? i+1 : i})`)
         await nextJumpEl.click()
-        await page.waitFor(5000)
+        await page.waitFor('#ywz_content_list')
 
         await handleData()
     }
