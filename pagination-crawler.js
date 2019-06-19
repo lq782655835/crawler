@@ -3,6 +3,8 @@ const chalk = require('chalk')
 const log = console.log
 
 const url = 'https://pinyin.sogou.com/dict/ywz/'
+const contentContainerSelector = '#ywz_content_list'
+const paginationContainerSelector = '#ywz_page'
 let result = []
 
 const main = async function(headless){
@@ -29,16 +31,16 @@ const main = async function(headless){
     })
 
     await page.goto(url)
-    await page.waitFor('#ywz_content_list')
+    await page.waitFor(contentContainerSelector)
     log(chalk.yellow('页面初次加载完毕'))
 
 
     async function handleData() {
-        let pageResult = await page.$$eval('#ywz_content_list ul li', lis => {
+        let pageResult = await page.$$eval(`${contentContainerSelector} ul li`, lis => {
             // 进入浏览器环境
             return Array.from(lis).map(li => {
-                let icon = li.querySelector('.ywz_content').innerHTML
-                let text = li.querySelector('.ywz_cont_name').innerHTML.replace('输入文字：', '')
+                let icon = li.querySelector('.ywz_content').textContent
+                let text = li.querySelector('.ywz_cont_name').textContent.replace('输入文字：', '')
                 console.log(icon)
                 return {icon, text}
             })
@@ -47,12 +49,13 @@ const main = async function(headless){
         log(pageResult)
     }
 
-    for (let i = 1; i <= 7; i++) {
+    let pageTotal = await page.$eval(`${paginationContainerSelector} li:nth-last-child(2)`, ele => ele.textContent)
+    for (let i = 1; i <= pageTotal; i++) {
         log(i)
 
-        let nextJumpEl = await page.$(`#ywz_page li:nth-child(${i > 1 ? i+1 : i})`)
+        let nextJumpEl = await page.$(`${paginationContainerSelector} li:nth-child(${i > 1 ? i+1 : i})`)
         await nextJumpEl.click()
-        await page.waitFor('#ywz_content_list')
+        await page.waitFor(contentContainerSelector)
 
         await handleData()
     }
